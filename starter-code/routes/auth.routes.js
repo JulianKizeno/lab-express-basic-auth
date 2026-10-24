@@ -1,6 +1,19 @@
 const express = require('express')
 const router = express.Router()
 
+// Reject structured query operators before authentication or database lookups.
+router.use(['/login', '/signup'], (req, res, next) => {
+    if (req.method !== 'POST') return next()
+    const body = req.body || {}
+    if (typeof body.user !== 'string' || !body.user.trim() ||
+        body.user.length > 128 || typeof body.password !== 'string' ||
+        !body.password || Buffer.byteLength(body.password, 'utf8') > 72) {
+        return res.status(400).json({ message: 'Invalid credentials format' })
+    }
+    return next()
+})
+
+
 const bcrypt = require('bcrypt')
 const bcryptSalt = 10
 
@@ -48,13 +61,19 @@ router.post('/login', (req, res, next) => {
             return
         }
 
-        if(!bcrypt.compareSync(password.foundUser.password)){
+        if(!bcrypt.compareSync(password, foundUser.password)){
             res.render('auth/login', {errorMessage: '<p>Contraseña incorrecta</p>'})
             return
         }
 
-        req.session.currentUser = foundUser
-        res.redirect('/')
+        req.session.regenerate(error => {
+            if (error) return next(error)
+            req.session.currentUser = { _id: foundUser._id, user: foundUser.user }
+            req.session.save(error => {
+                if (error) return next(error)
+                res.redirect('/')
+            })
+        })
     })
     .catch(error => console.log('Hay un Error en la busqueda del usuario al loguearse ', error))
 })

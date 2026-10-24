@@ -31,18 +31,18 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(session({
-//   secret: "webmad0320",
-//   cookie: { maxAge: 60000 },
-//   store: new MongoStore({
-//       mongooseConnection: mongoose.connection,
-//       ttl: 24 * 60 * 60 // 1 day
-//   })
-// }))
+const session = require('express-session');
+const sessionSecret = process.env.SESSION_SECRET ||
+  (process.env.NODE_ENV !== 'production' ? require('crypto').randomBytes(32).toString('hex') : null);
+if (!sessionSecret || sessionSecret.length < 32) throw new Error('SESSION_SECRET must contain at least 32 characters');
+app.use(session({
+  secret: sessionSecret, resave: false, saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' }
+}));
 
 // Express View engine setup
 
-app.use(require('node-sass-middleware')({
+app.use(require("./configs/sass.config.js")({
   src:  path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
   sourceMap: true
