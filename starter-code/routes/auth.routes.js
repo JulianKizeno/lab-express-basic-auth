@@ -53,8 +53,11 @@ router.post('/login', (req, res, next) => {
             return
         }
 
-        req.session.currentUser = foundUser
-        res.redirect('/')
+        req.session.regenerate(error => {
+            if (error) return next(error)
+            req.session.currentUser = { _id: foundUser._id, user: foundUser.user }
+            req.session.save(error => error ? next(error) : res.redirect('/'))
+        })
     })
     .catch(error => console.log('Hay un Error en la busqueda del usuario al loguearse ', error))
 })

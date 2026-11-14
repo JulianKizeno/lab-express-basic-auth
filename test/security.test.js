@@ -45,7 +45,7 @@ if (basic) {
         login({ body: { user: { $ne: null }, password: 'correct' } }, response())
         assert.equal(queried, 0)
         for (const password of ['wrong', 'correct']) {
-            const req = { body: { user: 'admin', password }, session: {} }; const res = response()
+            const req = { body: { user: 'admin', password }, session: { regenerate(done) { done() }, save(done) { done() } } }; const res = response()
             login(req, res)
             await new Promise(resolve => setImmediate(resolve))
             assert.equal(Boolean(req.session.currentUser), password === 'correct')
