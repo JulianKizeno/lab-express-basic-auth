@@ -10,7 +10,7 @@ router.get('/signup', (req, res, next) => res.render('auth/signup'))
 router.post('/signup', (req ,res, next) => {
     const {user, password} = req.body
 
-    if(!user || !password){
+    if(typeof user !== "string" || typeof password !== "string" || !user || !password){
         res.render('auth/signup', {errorMessage: '<p>Rellena los campos</p>'})
         return
     }
@@ -37,7 +37,7 @@ router.get('/login', (req, res, next) => res.render('auth/login'))
 router.post('/login', (req, res, next) => {
     const {user, password} = req.body
 
-    if(!user || !password){
+    if(typeof user !== "string" || typeof password !== "string" || !user || !password){
         res.render('auth/login', {errorMessage: '<p>Este Usuario ya existe</p>'})
         return
     }
@@ -48,7 +48,7 @@ router.post('/login', (req, res, next) => {
             return
         }
 
-        if(!bcrypt.compareSync(password.foundUser.password)){
+        if(!bcrypt.compareSync(password, foundUser.password)){
             res.render('auth/login', {errorMessage: '<p>Contraseña incorrecta</p>'})
             return
         }
